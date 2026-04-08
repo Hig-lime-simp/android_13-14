@@ -64,9 +64,20 @@ fun GameScreen(
 
         GameLayout(
             currentScrambledWord = gameUiState.currentScrambledWord,
-            onUserGuessChanged = { },
-            onKeyboardDone = { }
+            userGuess = gameViewModel.userGuess,
+            isGuessWrong = gameUiState.isGuessedWordWrong,
+            onUserGuessChanged = { gameViewModel.updateUserGuess(it) },
+            onKeyboardDone = { gameViewModel.checkUserGuess() },
+            onSubmitClicked = { gameViewModel.checkUserGuess() },
+            onSkipClicked = { gameViewModel.skipWord() }
         )
+
+        if (gameUiState.isGameOver) {
+            GameOverDialog(
+                finalScore = gameUiState.score,
+                onPlayAgain = { gameViewModel.resetGame() }
+            )
+        }
     }
 }
 
@@ -89,7 +100,7 @@ fun GameStatus(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Слово $wordCount из 10",
+                text = "Слово $wordCount из $MAX_NO_OF_WORDS",
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
@@ -103,13 +114,15 @@ fun GameStatus(
 @Composable
 fun GameLayout(
     currentScrambledWord: String,
+    userGuess: String,
+    isGuessWrong: Boolean,
     onUserGuessChanged: (String) -> Unit,
-    onKeyboardDone: () -> Unit
-) {
-    var userGuess by remember { mutableStateOf("") }
-
+    onKeyboardDone: () -> Unit,
+    onSubmitClicked: () -> Unit,
+    onSkipClicked: () -> Unit,
+    modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -138,27 +151,52 @@ fun GameLayout(
         OutlinedTextField(
             value = userGuess,
             onValueChange = {
-                userGuess = it
-                onUserGuessChanged(it)
+                    userGuess -> onUserGuessChanged(userGuess)
             },
+            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Введите слово") },
+            isError = isGuessWrong,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onKeyboardDone() })
         )
 
+        if (isGuessWrong) {
+            Text(
+                text = "Неправильно! Попробуйте ещё раз.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
         Button(
-            onClick = { },
+            onClick = onSubmitClicked,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Проверить")
         }
 
         OutlinedButton(
-            onClick = { },
+            onClick = onSkipClicked,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Пропустить")
         }
     }
+}
+
+@Composable
+fun GameOverDialog(
+    finalScore: Int,
+    onPlayAgain: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text("Игра окончена!") },
+        text = { Text("Ваш итоговый счёт: $finalScore") },
+        confirmButton = {
+            TextButton(onClick = onPlayAgain) {
+                Text("Играть снова")
+            }
+        }
+    )
 }
