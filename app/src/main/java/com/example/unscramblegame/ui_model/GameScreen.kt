@@ -73,8 +73,8 @@ fun GameScreen(
         )
 
         if (gameUiState.isGameOver) {
-            GameOverDialog(
-                finalScore = gameUiState.score,
+            FinalScoreDialog(
+                score = gameUiState.score,
                 onPlayAgain = { gameViewModel.resetGame() }
             )
         }
@@ -196,6 +196,35 @@ fun GameOverDialog(
         confirmButton = {
             TextButton(onClick = onPlayAgain) {
                 Text("Играть снова")
+            }
+        }
+    )
+}
+@Composable
+fun FinalScoreDialog(
+    score: Int,
+    onPlayAgain: () -> Unit,
+    modifier: Modifier = Modifier) {
+    AlertDialog(
+        onDismissRequest = {
+            // Пустой блок — диалог можно закрыть только кнопкой
+        },
+        title = { Text(text = "Поздравляем!") },
+        text = {
+            Column {
+                Text(text = "Вы набрали:")
+                Text(
+                    text = "$score очков",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontSize = 36.sp
+                )
+            }
+        },
+        modifier = modifier,
+        dismissButton = {},
+        confirmButton = {
+            TextButton(onClick = onPlayAgain) {
+                Text(text = "Играть снова")
             }
         }
     )
